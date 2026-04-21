@@ -1,0 +1,57 @@
+#################################################
+# WordPress core (solo si NO versionas el core)
+#################################################
+wp-admin/
+wp-includes/
+wp-config.php
+wp-config-sample.php
+
+#################################################
+# Contenido dinámico (NO versionar)
+#################################################
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/backup-*/
+wp-content/cache/
+
+#################################################
+# Entornos locales / herramientas
+#################################################
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+#################################################
+# Logs
+#################################################
+*.log
+
+#################################################
+# Base de datos
+#################################################
+*.sql
+*.db
+
+#################################################
+# Dependencias (Node / Composer)
+#################################################
+node_modules/
+vendor/
+composer.lock
+package-lock.json
+yarn.lock
+
+#################################################
+# Variables de entorno
+#################################################
+.env
+*.env
+.env.local
+.env.*.local
+
+#################################################
+# Local WP / entornos locales
+#################################################
+.local/
+local-config.php
