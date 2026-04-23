@@ -11,7 +11,9 @@ class WPSCT_Admin {
         add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']);
     }
 
-    public function enqueue_assets() {
+    public function enqueue_assets($hook) {
+
+        if ($hook !== 'toplevel_page_wpsct') return;
 
         wp_enqueue_style(
             'wpsct-admin',
@@ -56,6 +58,7 @@ class WPSCT_Admin {
 
             'performance' => [
                 'label' => __('Performance Setup', 'wp-site-control-toolkit'),
+                'desc'  => __('Optimized for speed and reduced backend activity.', 'wp-site-control-toolkit'),
                 'settings' => [
                     'disable-emojis' => 1,
                     'disable-embeds' => 1,
@@ -67,6 +70,7 @@ class WPSCT_Admin {
 
             'minimal' => [
                 'label' => __('Minimal Setup', 'wp-site-control-toolkit'),
+                'desc'  => __('Removes unnecessary WordPress features while keeping core functionality.', 'wp-site-control-toolkit'),
                 'settings' => [
                     'disable-emojis' => 1,
                     'disable-embeds' => 1,
@@ -77,6 +81,7 @@ class WPSCT_Admin {
 
             'secure' => [
                 'label' => __('Secure Setup', 'wp-site-control-toolkit'),
+                'desc'  => __('Applies basic security hardening for production environments.', 'wp-site-control-toolkit'),
                 'settings' => [
                     'login-security' => 1,
                     'disable-file-editor' => 1,
@@ -86,6 +91,7 @@ class WPSCT_Admin {
 
             'custom' => [
                 'label' => __('Custom Setup', 'wp-site-control-toolkit'),
+                'desc'  => __('Manually configure each option based on your needs.', 'wp-site-control-toolkit'),
                 'settings' => []
             ]
         ];
@@ -135,6 +141,7 @@ class WPSCT_Admin {
                 <strong><?php _e('Setup Mode', 'wp-site-control-toolkit'); ?></strong>
 
                 <form method="post" class="wpsct-presets">
+
                     <?php foreach ($presets as $key => $preset): ?>
 
                         <button name="wpsct_set_preset"
@@ -144,7 +151,12 @@ class WPSCT_Admin {
                         </button>
 
                     <?php endforeach; ?>
+
                 </form>
+
+                <p class="wpsct-preset-desc">
+                    <?php echo esc_html($presets[$active_preset]['desc'] ?? ''); ?>
+                </p>
 
             </div>
 
@@ -205,6 +217,7 @@ class WPSCT_Admin {
     private function toggle($key, $title, $desc, $settings) {
 
         $value = $settings[$key] ?? false;
+
         ?>
 
         <div class="wpsct-card">
@@ -267,7 +280,7 @@ class WPSCT_Admin {
         $this->toggle(
             'version-hiding',
             __('Hide WordPress Version', 'wp-site-control-toolkit'),
-            __("Removes version from HTML and feeds.\n\nReduces system exposure.\n\nRecommended for all sites.", 'wp-site-control-toolkit'),
+            __("Removes WordPress version from HTML and feeds.\n\nReduces system exposure.\n\nRecommended for all sites.", 'wp-site-control-toolkit'),
             $settings
         );
     }
@@ -277,7 +290,7 @@ class WPSCT_Admin {
         $this->toggle(
             'heartbeat-control',
             __('Heartbeat Control', 'wp-site-control-toolkit'),
-            __("Reduces background requests from Heartbeat API.\n\nImproves backend performance.\n\nRecommended for all sites.", 'wp-site-control-toolkit'),
+            __("Reduces background requests from WordPress Heartbeat API.\n\nImproves backend performance and reduces server load.\n\nRecommended for most websites.", 'wp-site-control-toolkit'),
             $settings
         );
     }
@@ -287,21 +300,21 @@ class WPSCT_Admin {
         $this->toggle(
             'login-security',
             __('Hide Login Errors', 'wp-site-control-toolkit'),
-            __("Replaces detailed login errors.\n\nPrevents user enumeration.\n\nRecommended for production.", 'wp-site-control-toolkit'),
+            __("Replaces login error messages with generic responses.\n\nPrevents user enumeration.\n\nRecommended for production sites.", 'wp-site-control-toolkit'),
             $settings
         );
 
         $this->toggle(
             'disable-file-editor',
             __('Disable File Editor', 'wp-site-control-toolkit'),
-            __("Disables file editor in admin.\n\nPrevents direct code changes.\n\nRecommended for all sites.", 'wp-site-control-toolkit'),
+            __("Disables theme and plugin file editor in admin.\n\nPrevents direct code modification from dashboard.\n\nRecommended for all production sites.", 'wp-site-control-toolkit'),
             $settings
         );
 
         $this->toggle(
             'disable-xmlrpc',
             __('Disable XML-RPC', 'wp-site-control-toolkit'),
-            __("Disables XML-RPC endpoint.\n\nReduces attack surface.\n\nRecommended unless explicitly needed.", 'wp-site-control-toolkit'),
+            __("Disables XML-RPC endpoint.\n\nReduces attack surface and abuse vectors.\n\nRecommended unless explicitly required.", 'wp-site-control-toolkit'),
             $settings
         );
     }
@@ -311,7 +324,7 @@ class WPSCT_Admin {
         $this->toggle(
             'media-sizes',
             __('Control Image Sizes', 'wp-site-control-toolkit'),
-            __("Prevents unnecessary image sizes.\n\nReduces storage usage.\n\nRecommended for most sites.", 'wp-site-control-toolkit'),
+            __("Prevents unnecessary image sizes from being generated.\n\nReduces storage usage and database clutter.\n\nRecommended for most websites.", 'wp-site-control-toolkit'),
             $settings
         );
     }

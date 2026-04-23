@@ -1,3 +1,93 @@
+
+
+/* =========================
+   Layout base
+========================= */
+
+.wpsct-box {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+/* =========================
+   Presets
+========================= */
+
+.wpsct-presets {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.wpsct-preset-btn {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #111827;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all .2s ease;
+}
+
+.wpsct-preset-btn:hover {
+    background: #f9fafb;
+}
+
+.wpsct-preset-btn.active {
+    background: #111827;
+    color: #fff;
+    border-color: #111827;
+}
+
+/* =========================
+   Tabs
+========================= */
+
+.wpsct-tabs {
+    display: flex;
+    gap: 10px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 22px;
+}
+
+.wpsct-tab {
+    padding: 10px 14px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 16px;
+    border-bottom: 2px solid transparent;
+    color: #111827;
+    transition: all .2s ease;
+}
+
+.wpsct-tab:hover {
+    color: #000;
+}
+
+.wpsct-tab.active {
+    border-bottom-color: #111827;
+}
+
+/* =========================
+   Panel
+========================= */
+
+.wpsct-panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 22px;
+}
+
+/* =========================
+   Cards (ya tenías parte)
+========================= */
+
 .wpsct-card {
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -9,17 +99,25 @@
     align-items: center;
 }
 
+/* =========================
+   Typography
+========================= */
+
 .wpsct-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 6px;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
 }
 
 .wpsct-desc {
-    font-size: 14px;
+    font-size: 16px;
     color: #4b5563;
-    line-height: 1.7;
+    line-height: 1.2;
 }
+
+/* =========================
+   Toggle
+========================= */
 
 .wpsct-toggle {
     position: relative;
@@ -58,4 +156,10 @@
 
 .wpsct-toggle input:checked + .wpsct-slider::before {
     transform: translateX(22px);
+}
+
+.wpsct-preset-desc {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #6b7280;
 }
