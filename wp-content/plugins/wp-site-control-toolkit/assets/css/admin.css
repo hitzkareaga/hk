@@ -1,0 +1,61 @@
+.wpsct-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wpsct-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.wpsct-desc {
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.7;
+}
+
+.wpsct-toggle {
+    position: relative;
+    width: 46px;
+    height: 24px;
+}
+
+.wpsct-toggle input {
+    display: none;
+}
+
+.wpsct-slider {
+    position: absolute;
+    inset: 0;
+    background: #d1d5db;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: .25s;
+}
+
+.wpsct-toggle input:checked + .wpsct-slider {
+    background: #22c55e;
+}
+
+.wpsct-slider::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .25s;
+}
+
+.wpsct-toggle input:checked + .wpsct-slider::before {
+    transform: translateX(22px);
+}
