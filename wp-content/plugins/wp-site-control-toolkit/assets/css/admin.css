@@ -1,4 +1,13 @@
+/* =========================
+   Brand Colors
+========================= */
 
+:root {
+    --wpsct-primary: #0040FC;
+    --wpsct-dark: #02032B;
+    --wpsct-accent: #F05B39;
+    --wpsct-border: #e5e7eb;
+}
 
 /* =========================
    Layout base
@@ -6,42 +15,102 @@
 
 .wpsct-box {
     background: #fff;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--wpsct-border);
     border-radius: 12px;
-    padding: 16px;
+    padding: 18px;
     margin-bottom: 20px;
 }
 
 /* =========================
-   Presets
+   Setup grid
 ========================= */
 
+.wpsct-preset-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+    background: #fff;
+    border: 1px solid var(--wpsct-border);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+/* =========================
+   Presets (left side)
+========================= */
+
+.wpsct-preset-controls {
+    padding: 16px;
+}
+
+.wpsct-box-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--wpsct-dark);
+}
+
 .wpsct-presets {
-    margin-top: 10px;
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
 }
 
 .wpsct-preset-btn {
     padding: 8px 12px;
     border-radius: 8px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--wpsct-border);
     background: #fff;
-    color: #111827;
+    color: var(--wpsct-dark);
     cursor: pointer;
     font-size: 15px;
     transition: all .2s ease;
+    text-align: left;
 }
 
 .wpsct-preset-btn:hover {
-    background: #f9fafb;
+    border-color: var(--wpsct-primary);
 }
 
 .wpsct-preset-btn.active {
-    background: #111827;
+    background: var(--wpsct-dark);
     color: #fff;
-    border-color: #111827;
+    border-color: var(--wpsct-dark);
+}
+
+/* =========================
+   Right panel
+========================= */
+
+.wpsct-preset-info {
+    padding: 16px;
+    transition: opacity .25s ease, transform .25s ease;
+}
+
+.wpsct-preset-info.is-fading {
+    opacity: 0;
+    transform: translateY(6px);
+}
+
+.wpsct-preset-active-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--wpsct-dark);
+}
+
+.wpsct-meta-title {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 12px;
+    color: #6b7280;
+}
+
+.wpsct-meta-text {
+    font-size: 14px;
+    color: var(--wpsct-dark);
 }
 
 /* =========================
@@ -51,7 +120,7 @@
 .wpsct-tabs {
     display: flex;
     gap: 10px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--wpsct-border);
     margin-bottom: 22px;
 }
 
@@ -61,16 +130,17 @@
     font-weight: 500;
     font-size: 16px;
     border-bottom: 2px solid transparent;
-    color: #111827;
+    color: var(--wpsct-dark);
     transition: all .2s ease;
 }
 
 .wpsct-tab:hover {
-    color: #000;
+    color: var(--wpsct-primary);
 }
 
 .wpsct-tab.active {
-    border-bottom-color: #111827;
+    border-bottom-color: var(--wpsct-primary);
+    color: var(--wpsct-primary);
 }
 
 /* =========================
@@ -79,18 +149,18 @@
 
 .wpsct-panel {
     background: #fff;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--wpsct-border);
     border-radius: 12px;
     padding: 22px;
 }
 
 /* =========================
-   Cards (ya tenías parte)
+   Cards
 ========================= */
 
 .wpsct-card {
     background: #fff;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--wpsct-border);
     border-radius: 10px;
     padding: 20px;
     margin-bottom: 14px;
@@ -106,13 +176,25 @@
 .wpsct-title {
     font-size: 18px;
     font-weight: 700;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    color: var(--wpsct-dark);
 }
 
 .wpsct-desc {
-    font-size: 16px;
+    font-size: 14px;
     color: #4b5563;
-    line-height: 1.2;
+}
+
+/* =========================
+   Impact
+========================= */
+
+.wpsct-impact {
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--wpsct-accent);
+    letter-spacing: .02em;
 }
 
 /* =========================
@@ -139,7 +221,7 @@
 }
 
 .wpsct-toggle input:checked + .wpsct-slider {
-    background: #22c55e;
+    background: var(--wpsct-accent);
 }
 
 .wpsct-slider::before {
@@ -156,10 +238,4 @@
 
 .wpsct-toggle input:checked + .wpsct-slider::before {
     transform: translateX(22px);
-}
-
-.wpsct-preset-desc {
-    margin-top: 10px;
-    font-size: 14px;
-    color: #6b7280;
 }

@@ -12,33 +12,45 @@ class WPSCT_Core {
 
         $settings = get_option('wpsct_settings', []);
 
-        $modules = [
-            'disable-emojis',
-            'disable-embeds',
-            'heartbeat-control',
-            'login-security',
-            'disable-file-editor',
-            'cleanup-head',
-            'version-hiding',
-            'disable-xmlrpc',
-            'media-sizes'
-        ];
+        if (!function_exists('wpsct_get_content')) {
+            return;
+        }
 
-        foreach ($modules as $module) {
+        $content  = wpsct_get_content();
+        $features = $content['features'] ?? [];
 
-            if (empty($settings[$module])) continue;
+        foreach ($features as $key => $feature) {
 
-            $file = WPSCT_PATH . 'modules/class-' . $module . '.php';
+            if (empty($settings[$key])) {
+                continue;
+            }
 
-            if (!file_exists($file)) continue;
+            if (!empty($feature['pro'])) {
+                continue;
+            }
+
+            $file = WPSCT_PATH . 'modules/class-' . $key . '.php';
+
+            if (!file_exists($file)) {
+                continue;
+            }
 
             require_once $file;
 
-            $class = 'WPSCT_' . str_replace('-', '_', ucwords($module, '-'));
+            $class = $this->get_class_name($key);
 
             if (class_exists($class)) {
                 new $class();
             }
         }
+    }
+
+    private function get_class_name($key) {
+
+        $parts = explode('-', $key);
+
+        $parts = array_map('ucfirst', $parts);
+
+        return 'WPSCT_' . implode('_', $parts);
     }
 }

@@ -11,6 +11,10 @@ class WPSCT_Admin {
         add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']);
     }
 
+    /* =========================================================
+     * ASSETS
+     * ========================================================= */
+
     public function enqueue_assets($hook) {
 
         if ($hook !== 'toplevel_page_wpsct') return;
@@ -31,6 +35,10 @@ class WPSCT_Admin {
         );
     }
 
+    /* =========================================================
+     * MENU
+     * ========================================================= */
+
     public function menu() {
 
         add_menu_page(
@@ -39,66 +47,17 @@ class WPSCT_Admin {
             'manage_options',
             'wpsct',
             [$this, 'render'],
-            'dashicons-admin-tools',
+            'dashicons-yes',
             58
         );
     }
 
+    /* =========================================================
+     * SETTINGS
+     * ========================================================= */
+
     public function register_settings() {
         register_setting('wpsct_group', 'wpsct_settings');
-    }
-
-    /* =========================
-       PRESETS
-    ========================= */
-
-    private function get_presets() {
-
-        return [
-
-            'performance' => [
-                'label' => __('Performance Setup', 'wp-site-control-toolkit'),
-                'desc'  => __('Optimized for speed and reduced backend activity.', 'wp-site-control-toolkit'),
-                'settings' => [
-                    'disable-emojis' => 1,
-                    'disable-embeds' => 1,
-                    'heartbeat-control' => 1,
-                    'media-sizes' => 1,
-                    'login-security' => 1,
-                ]
-            ],
-
-            'minimal' => [
-                'label' => __('Minimal Setup', 'wp-site-control-toolkit'),
-                'desc'  => __('Removes unnecessary WordPress features while keeping core functionality.', 'wp-site-control-toolkit'),
-                'settings' => [
-                    'disable-emojis' => 1,
-                    'disable-embeds' => 1,
-                    'cleanup-head' => 1,
-                    'version-hiding' => 1,
-                ]
-            ],
-
-            'secure' => [
-                'label' => __('Secure Setup', 'wp-site-control-toolkit'),
-                'desc'  => __('Applies basic security hardening for production environments.', 'wp-site-control-toolkit'),
-                'settings' => [
-                    'login-security' => 1,
-                    'disable-file-editor' => 1,
-                    'disable-xmlrpc' => 1,
-                ]
-            ],
-
-            'custom' => [
-                'label' => __('Custom Setup', 'wp-site-control-toolkit'),
-                'desc'  => __('Manually configure each option based on your needs.', 'wp-site-control-toolkit'),
-                'settings' => []
-            ]
-        ];
-    }
-
-    private function get_active_preset() {
-        return get_option('wpsct_active_preset', 'custom');
     }
 
     public function handle_preset_save() {
@@ -106,77 +65,99 @@ class WPSCT_Admin {
         if (!isset($_POST['wpsct_set_preset'])) return;
         if (!current_user_can('manage_options')) return;
 
-        $preset = sanitize_text_field($_POST['wpsct_set_preset']);
-        update_option('wpsct_active_preset', $preset);
+        update_option(
+            'wpsct_active_preset',
+            sanitize_text_field($_POST['wpsct_set_preset'])
+        );
     }
 
-    /* =========================
-       RENDER
-    ========================= */
+    private function get_active_preset() {
+        return get_option('wpsct_active_preset', 'custom');
+    }
+
+    /* =========================================================
+     * RENDER
+     * ========================================================= */
 
     public function render() {
 
         $settings = get_option('wpsct_settings', []);
         $tab = $_GET['tab'] ?? 'cleanup';
 
-        $presets = $this->get_presets();
-        $active_preset = $this->get_active_preset();
+        $content = wpsct_get_content();
+        $features = $content['features'];
+        $presets  = $content['presets'];
 
-        $preset_settings = $presets[$active_preset]['settings'] ?? [];
-        $settings = array_merge($preset_settings, $settings);
+        $active = $this->get_active_preset();
 
+        $settings = array_merge(
+            $presets[$active]['settings'] ?? [],
+            $settings
+        );
         ?>
 
-        <div class="wrap">
+        <div class="wrap wpsct-wrap">
 
-            <h1><?php _e('Site Control Toolkit', 'wp-site-control-toolkit'); ?></h1>
-
-            <p class="description">
-                <em><?php _e('Remove unnecessary WordPress behavior and simplify your setup.', 'wp-site-control-toolkit'); ?></em>
-            </p>
+            <h1>Site Control Toolkit</h1>
 
             <!-- PRESETS -->
-            <div class="wpsct-box">
+            <div class="wpsct-preset-grid">
 
-                <strong><?php _e('Setup Mode', 'wp-site-control-toolkit'); ?></strong>
+                <div class="wpsct-preset-controls">
 
-                <form method="post" class="wpsct-presets">
+                    <div class="wpsct-box-title">Configuration Mode</div>
 
-                    <?php foreach ($presets as $key => $preset): ?>
+                    <form method="post" class="wpsct-presets">
 
-                        <button name="wpsct_set_preset"
-                                value="<?php echo esc_attr($key); ?>"
-                                class="wpsct-preset-btn <?php echo $active_preset === $key ? 'active' : ''; ?>">
-                            <?php echo esc_html($preset['label']); ?>
-                        </button>
+                        <?php foreach ($presets as $key => $preset): ?>
 
-                    <?php endforeach; ?>
+                            <button class="wpsct-preset-btn <?php echo $active === $key ? 'active' : ''; ?>"
+                                    name="wpsct_set_preset"
+                                    value="<?php echo esc_attr($key); ?>">
 
-                </form>
+                                <?php echo esc_html($preset['label']); ?>
 
-                <p class="wpsct-preset-desc">
-                    <?php echo esc_html($presets[$active_preset]['desc'] ?? ''); ?>
-                </p>
+                            </button>
+
+                        <?php endforeach; ?>
+
+                    </form>
+
+                </div>
+
+                <div class="wpsct-preset-info">
+
+                    <div class="wpsct-preset-active-title">
+                        <?php echo esc_html($presets[$active]['label']); ?>
+                    </div>
+
+                    <div class="wpsct-meta-title">What this setup is for</div>
+                    <div class="wpsct-meta-text">
+                        <?php echo esc_html($presets[$active]['desc']); ?>
+                    </div>
+
+                </div>
 
             </div>
 
             <!-- TABS -->
             <div class="wpsct-tabs">
 
-                <?php $this->tab('cleanup', __('System Cleanup', 'wp-site-control-toolkit'), $tab); ?>
-                <?php $this->tab('performance', __('Performance', 'wp-site-control-toolkit'), $tab); ?>
-                <?php $this->tab('security', __('Security', 'wp-site-control-toolkit'), $tab); ?>
-                <?php $this->tab('media', __('Media', 'wp-site-control-toolkit'), $tab); ?>
+                <?php $this->tab('cleanup', 'System Cleanup', $tab); ?>
+                <?php $this->tab('performance', 'Performance', $tab); ?>
+                <?php $this->tab('security', 'Security', $tab); ?>
+                <?php $this->tab('media', 'Media', $tab); ?>
 
             </div>
 
+            <!-- FORM -->
             <form method="post" action="options.php">
 
                 <?php settings_fields('wpsct_group'); ?>
 
                 <div class="wpsct-panel">
 
-                    <?php $this->render_tab($tab, $settings); ?>
+                    <?php $this->render_tab($tab, $settings, $features); ?>
 
                 </div>
 
@@ -189,35 +170,49 @@ class WPSCT_Admin {
         <?php
     }
 
+    /* =========================================================
+     * TAB NAV
+     * ========================================================= */
+
     private function tab($key, $label, $current) {
 
         $active = $current === $key;
-        ?>
 
+        ?>
         <a href="?page=wpsct&tab=<?php echo esc_attr($key); ?>"
            class="wpsct-tab <?php echo $active ? 'active' : ''; ?>">
             <?php echo esc_html($label); ?>
         </a>
-
         <?php
     }
 
-    private function render_tab($tab, $settings) {
+    /* =========================================================
+     * FEATURE RENDERING
+     * ========================================================= */
 
-        if ($tab === 'cleanup') $this->cleanup($settings);
-        if ($tab === 'performance') $this->performance($settings);
-        if ($tab === 'security') $this->security($settings);
-        if ($tab === 'media') $this->media($settings);
+    private function render_tab($tab, $settings, $features) {
+
+        foreach ($features as $key => $feature) {
+
+            if (($feature['group'] ?? '') !== $tab) continue;
+
+            $this->toggle(
+                $key,
+                $feature['label'] ?? '',
+                $feature['desc'] ?? '',
+                $feature['impact'] ?? 'low',
+                $settings
+            );
+        }
     }
 
-    /* =========================
-       TOGGLE UI
-    ========================= */
+    /* =========================================================
+     * TOGGLE UI
+     * ========================================================= */
 
-    private function toggle($key, $title, $desc, $settings) {
+    private function toggle($key, $title, $desc, $impact, $settings) {
 
         $value = $settings[$key] ?? false;
-
         ?>
 
         <div class="wpsct-card">
@@ -229,7 +224,11 @@ class WPSCT_Admin {
                 </div>
 
                 <div class="wpsct-desc">
-                    <?php echo wp_kses_post(nl2br($desc)); ?>
+                    <?php echo nl2br(esc_html($desc)); ?>
+                </div>
+
+                <div class="wpsct-impact">
+                    Impact: <?php echo esc_html(strtoupper($impact)); ?>
                 </div>
 
             </div>
@@ -248,84 +247,5 @@ class WPSCT_Admin {
         </div>
 
         <?php
-    }
-
-    /* =========================
-       FEATURES
-    ========================= */
-
-    private function cleanup($settings) {
-
-        $this->toggle(
-            'disable-emojis',
-            __('Disable Emojis', 'wp-site-control-toolkit'),
-            __("Removes WordPress emoji support.\n\nEmoji scripts load even if not used.\n\nRecommended for most websites.", 'wp-site-control-toolkit'),
-            $settings
-        );
-
-        $this->toggle(
-            'disable-embeds',
-            __('Disable Embeds', 'wp-site-control-toolkit'),
-            __("Disables automatic embedding of external content.\n\nRemoves unnecessary scripts and requests.\n\nRecommended for performance.", 'wp-site-control-toolkit'),
-            $settings
-        );
-
-        $this->toggle(
-            'cleanup-head',
-            __('Head Cleanup', 'wp-site-control-toolkit'),
-            __("Removes unnecessary elements from the <head>.\n\nIncludes version tags and metadata.\n\nRecommended for cleaner output.", 'wp-site-control-toolkit'),
-            $settings
-        );
-
-        $this->toggle(
-            'version-hiding',
-            __('Hide WordPress Version', 'wp-site-control-toolkit'),
-            __("Removes WordPress version from HTML and feeds.\n\nReduces system exposure.\n\nRecommended for all sites.", 'wp-site-control-toolkit'),
-            $settings
-        );
-    }
-
-    private function performance($settings) {
-
-        $this->toggle(
-            'heartbeat-control',
-            __('Heartbeat Control', 'wp-site-control-toolkit'),
-            __("Reduces background requests from WordPress Heartbeat API.\n\nImproves backend performance and reduces server load.\n\nRecommended for most websites.", 'wp-site-control-toolkit'),
-            $settings
-        );
-    }
-
-    private function security($settings) {
-
-        $this->toggle(
-            'login-security',
-            __('Hide Login Errors', 'wp-site-control-toolkit'),
-            __("Replaces login error messages with generic responses.\n\nPrevents user enumeration.\n\nRecommended for production sites.", 'wp-site-control-toolkit'),
-            $settings
-        );
-
-        $this->toggle(
-            'disable-file-editor',
-            __('Disable File Editor', 'wp-site-control-toolkit'),
-            __("Disables theme and plugin file editor in admin.\n\nPrevents direct code modification from dashboard.\n\nRecommended for all production sites.", 'wp-site-control-toolkit'),
-            $settings
-        );
-
-        $this->toggle(
-            'disable-xmlrpc',
-            __('Disable XML-RPC', 'wp-site-control-toolkit'),
-            __("Disables XML-RPC endpoint.\n\nReduces attack surface and abuse vectors.\n\nRecommended unless explicitly required.", 'wp-site-control-toolkit'),
-            $settings
-        );
-    }
-
-    private function media($settings) {
-
-        $this->toggle(
-            'media-sizes',
-            __('Control Image Sizes', 'wp-site-control-toolkit'),
-            __("Prevents unnecessary image sizes from being generated.\n\nReduces storage usage and database clutter.\n\nRecommended for most websites.", 'wp-site-control-toolkit'),
-            $settings
-        );
     }
 }

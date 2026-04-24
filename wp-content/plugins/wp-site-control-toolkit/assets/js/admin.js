@@ -24,3 +24,25 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 });
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const buttons = document.querySelectorAll('.wpsct-preset-btn');
+    const panel = document.getElementById('wpsct-preset-info');
+
+    buttons.forEach(btn => {
+
+        btn.addEventListener('click', function (e) {
+
+            // allow form submit but animate UI first
+            panel.classList.add('is-fading');
+
+            setTimeout(() => {
+                panel.classList.remove('is-fading');
+            }, 250);
+
+        });
+
+    });
+
+});
