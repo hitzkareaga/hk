@@ -53,6 +53,7 @@ Produces cleaner HTML and reduces unnecessary output.",
         'impact' => 'medium',
     ],
 
+
     'disable-comments' => [
         'label' => __('Disable Comments', 'wp-site-control-toolkit'),
         'desc'  => __(

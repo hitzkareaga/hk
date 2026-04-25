@@ -1,48 +1,89 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    // Base hook para futuras features PRO
-    console.log('WPSCT admin loaded');
-
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-
     const presetButtons = document.querySelectorAll('.wpsct-preset-btn');
-    const checkboxes = document.querySelectorAll('.wpsct-toggle input');
+    const toggles = document.querySelectorAll('.wpsct-toggle input');
 
-    const customPreset = document.querySelector('[value="custom"]');
+    let currentPreset = getActivePreset();
 
-    checkboxes.forEach(cb => {
-        cb.addEventListener('change', () => {
+    function getActivePreset() {
+        const active = document.querySelector('.wpsct-preset-btn.active');
+        return active ? active.value : 'custom';
+    }
 
-            if (!customPreset) return;
+    function setActivePresetUI(presetKey) {
 
-            presetButtons.forEach(btn => btn.classList.remove('active'));
-            customPreset.classList.add('active');
-
+        presetButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.value === presetKey);
         });
-    });
+    }
 
-});
+    function switchToCustom() {
 
-document.addEventListener('DOMContentLoaded', function () {
+        if (currentPreset === 'custom') return;
 
-    const buttons = document.querySelectorAll('.wpsct-preset-btn');
-    const panel = document.getElementById('wpsct-preset-info');
+        currentPreset = 'custom';
 
-    buttons.forEach(btn => {
+        setActivePresetUI('custom');
 
-        btn.addEventListener('click', function (e) {
+        updatePresetTitle('Custom');
+    }
 
-            // allow form submit but animate UI first
-            panel.classList.add('is-fading');
+    function updatePresetTitle(title) {
 
-            setTimeout(() => {
-                panel.classList.remove('is-fading');
-            }, 250);
+        const titleEl = document.querySelector('.wpsct-preset-active-title');
 
+        if (titleEl) {
+            titleEl.innerText = title;
+        }
+    }
+
+    function bindToggleChanges() {
+
+        toggles.forEach(toggle => {
+
+            toggle.addEventListener('change', function () {
+
+                // cualquier cambio manual => custom
+                switchToCustom();
+            });
         });
+    }
 
-    });
+    function bindPresetButtons() {
+
+        presetButtons.forEach(btn => {
+
+            btn.addEventListener('click', function () {
+
+                const presetKey = this.value;
+
+                currentPreset = presetKey;
+
+                setActivePresetUI(presetKey);
+
+                updatePresetTitle(this.textContent.trim());
+
+                // reset UI animation
+                const infoBox = document.querySelector('.wpsct-preset-info');
+
+                if (infoBox) {
+                    infoBox.classList.add('is-fading');
+
+                    setTimeout(() => {
+                        infoBox.classList.remove('is-fading');
+                    }, 200);
+                }
+            });
+        });
+    }
+
+    function syncInitialState() {
+        setActivePresetUI(currentPreset);
+    }
+
+    // INIT
+    bindToggleChanges();
+    bindPresetButtons();
+    syncInitialState();
 
 });
