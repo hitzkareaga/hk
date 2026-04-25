@@ -53,21 +53,6 @@ Produces cleaner HTML and reduces unnecessary output.",
         'impact' => 'medium',
     ],
 
-    'version-hiding' => [
-        'label' => __('Hide WordPress Version', 'wp-site-control-toolkit'),
-        'desc'  => __(
-"WordPress exposes its version in the frontend.
-
-What this changes:
-- Removes WordPress version from output
-
-Why this is useful:
-Reduces information exposure to potential attackers.",
-        'wp-site-control-toolkit'),
-        'group' => 'cleanup',
-        'impact' => 'low',
-    ],
-
     'disable-comments' => [
         'label' => __('Disable Comments', 'wp-site-control-toolkit'),
         'desc'  => __(

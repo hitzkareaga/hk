@@ -11,10 +11,6 @@ class WPSCT_Admin {
         add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']);
     }
 
-    /* =========================================================
-     * ASSETS
-     * ========================================================= */
-
     public function enqueue_assets($hook) {
 
         if ($hook !== 'toplevel_page_wpsct') return;
@@ -35,10 +31,6 @@ class WPSCT_Admin {
         );
     }
 
-    /* =========================================================
-     * MENU
-     * ========================================================= */
-
     public function menu() {
 
         add_menu_page(
@@ -52,12 +44,12 @@ class WPSCT_Admin {
         );
     }
 
-    /* =========================================================
-     * SETTINGS
-     * ========================================================= */
-
     public function register_settings() {
         register_setting('wpsct_group', 'wpsct_settings');
+    }
+
+    private function get_active_preset() {
+        return get_option('wpsct_active_preset', 'custom');
     }
 
     public function handle_preset_save() {
@@ -71,38 +63,171 @@ class WPSCT_Admin {
         );
     }
 
-    private function get_active_preset() {
-        return get_option('wpsct_active_preset', 'custom');
+    /* =========================
+       PRESETS
+    ========================= */
+
+    private function get_presets() {
+
+        return [
+
+            'performance' => [
+                'label' => 'Performance',
+                'desc'  => 'Optimized for speed and reduced backend activity.',
+                'settings' => [
+                    'disable-emojis' => 1,
+                    'disable-embeds' => 1,
+                    'heartbeat-control' => 1,
+                    'media-sizes' => 1,
+                ]
+            ],
+
+            'secure' => [
+                'label' => 'Secure',
+                'desc'  => 'Basic security hardening.',
+                'settings' => [
+                    'login-security' => 1,
+                    'disable-file-editor' => 1,
+                    'disable-xmlrpc' => 1,
+                ]
+            ],
+
+            'custom' => [
+                'label' => 'Custom',
+                'desc'  => 'Manual configuration.',
+                'settings' => []
+            ]
+        ];
     }
 
-    /* =========================================================
-     * RENDER
-     * ========================================================= */
+    /* =========================
+       FEATURES
+    ========================= */
+
+    private function get_features() {
+
+        return [
+
+            'disable-emojis' => [
+                'title' => 'Disable Emojis',
+                'desc' => 'Removes emoji scripts.',
+                'changes' => 'Removes emoji assets from frontend/admin.',
+                'why' => 'Reduces unnecessary HTTP requests.',
+                'impact' => 'LOW',
+                'group' => 'cleanup'
+            ],
+
+            'disable-embeds' => [
+                'title' => 'Disable Embeds',
+                'desc' => 'Disables oEmbeds.',
+                'changes' => 'Stops embed scripts loading.',
+                'why' => 'Reduces external requests.',
+                'impact' => 'LOW',
+                'group' => 'cleanup'
+            ],
+
+            'cleanup-head' => [
+                'title' => 'Head Cleanup',
+                'desc' => 'Removes unnecessary WP head tags.',
+                'changes' => 'Cleans wp_head output.',
+                'why' => 'Cleaner HTML and less metadata leakage.',
+                'impact' => 'MEDIUM',
+                'group' => 'cleanup'
+            ],
+
+            'heartbeat-control' => [
+                'title' => 'Heartbeat Control',
+                'desc' => 'Reduces WP heartbeat usage.',
+                'changes' => 'Less admin AJAX calls.',
+                'why' => 'Improves backend performance.',
+                'impact' => 'MEDIUM',
+                'group' => 'performance'
+            ],
+
+            'login-security' => [
+                'title' => 'Hide Login Errors',
+                'desc' => 'Generic login errors.',
+                'changes' => 'Hides login hints.',
+                'why' => 'Prevents user enumeration.',
+                'impact' => 'LOW',
+                'group' => 'security'
+            ],
+
+            'disable-file-editor' => [
+                'title' => 'Disable File Editor',
+                'desc' => 'Disables WP editor.',
+                'changes' => 'Removes theme/plugin editor.',
+                'why' => 'Prevents accidental code changes.',
+                'impact' => 'MEDIUM',
+                'group' => 'security'
+            ],
+
+            'disable-xmlrpc' => [
+                'title' => 'Disable XML-RPC',
+                'desc' => 'Disables XML-RPC.',
+                'changes' => 'Blocks remote access endpoint.',
+                'why' => 'Improves security surface.',
+                'impact' => 'MEDIUM',
+                'group' => 'security'
+            ],
+
+            'media-sizes' => [
+                'title' => 'Control Image Sizes',
+                'desc' => 'Stops extra image sizes.',
+                'changes' => 'Prevents extra image generation.',
+                'why' => 'Saves storage space.',
+                'impact' => 'MEDIUM',
+                'group' => 'media'
+            ],
+        ];
+    }
+
+    /* =========================
+       ACTIVE FEATURES LIST
+    ========================= */
+
+    private function get_active_features_list($settings, $features) {
+
+        $active = [];
+
+        foreach ($settings as $key => $value) {
+
+            if (empty($value)) continue;
+            if (!isset($features[$key])) continue;
+
+            $active[] = $features[$key]['title'];
+        }
+
+        return $active;
+    }
+
+    /* =========================
+       RENDER
+    ========================= */
 
     public function render() {
 
         $settings = get_option('wpsct_settings', []);
         $tab = $_GET['tab'] ?? 'cleanup';
 
-        $content = wpsct_get_content();
-        $features = $content['features'];
-        $presets  = $content['presets'];
+        $presets = $this->get_presets();
+        $features = $this->get_features();
 
         $active = $this->get_active_preset();
 
-        $settings = array_merge(
-            $presets[$active]['settings'] ?? [],
-            $settings
-        );
+        // preset + overrides (important UX behavior)
+        $preset_settings = $presets[$active]['settings'] ?? [];
+        $settings = array_merge($preset_settings, $settings);
+
         ?>
 
         <div class="wrap wpsct-wrap">
 
             <h1>Site Control Toolkit</h1>
 
-            <!-- PRESETS -->
             <div class="wpsct-preset-grid">
 
+                <!-- LEFT -->
                 <div class="wpsct-preset-controls">
 
                     <div class="wpsct-box-title">Configuration Mode</div>
@@ -125,6 +250,7 @@ class WPSCT_Admin {
 
                 </div>
 
+                <!-- RIGHT -->
                 <div class="wpsct-preset-info">
 
                     <div class="wpsct-preset-active-title">
@@ -134,6 +260,30 @@ class WPSCT_Admin {
                     <div class="wpsct-meta-title">What this setup is for</div>
                     <div class="wpsct-meta-text">
                         <?php echo esc_html($presets[$active]['desc']); ?>
+                    </div>
+
+                    <div class="wpsct-preset-activates">
+
+                        <div class="wpsct-preset-activates-title">
+                            What this setup activates
+                        </div>
+
+                        <div class="wpsct-preset-activates-list">
+
+                            <?php
+                            $active_list = $this->get_active_features_list($settings, $features);
+                            ?>
+
+                            <?php if (empty($active_list)): ?>
+                                <em>No features enabled</em>
+                            <?php else: ?>
+                                <?php foreach ($active_list as $item): ?>
+                                    <div>• <?php echo esc_html($item); ?></div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+
+                        </div>
+
                     </div>
 
                 </div>
@@ -150,7 +300,6 @@ class WPSCT_Admin {
 
             </div>
 
-            <!-- FORM -->
             <form method="post" action="options.php">
 
                 <?php settings_fields('wpsct_group'); ?>
@@ -170,10 +319,6 @@ class WPSCT_Admin {
         <?php
     }
 
-    /* =========================================================
-     * TAB NAV
-     * ========================================================= */
-
     private function tab($key, $label, $current) {
 
         $active = $current === $key;
@@ -186,63 +331,71 @@ class WPSCT_Admin {
         <?php
     }
 
-    /* =========================================================
-     * FEATURE RENDERING
-     * ========================================================= */
-
     private function render_tab($tab, $settings, $features) {
 
-        foreach ($features as $key => $feature) {
+        foreach ($features as $key => $f) {
 
-            if (($feature['group'] ?? '') !== $tab) continue;
+            if ($f['group'] !== $tab) continue;
 
             $this->toggle(
                 $key,
-                $feature['label'] ?? '',
-                $feature['desc'] ?? '',
-                $feature['impact'] ?? 'low',
+                $f['title'],
+                $f['desc'],
+                $f['changes'],
+                $f['why'],
+                $f['impact'],
                 $settings
             );
         }
     }
 
-    /* =========================================================
-     * TOGGLE UI
-     * ========================================================= */
+    private function toggle($key, $title, $desc, $changes, $why, $impact, $settings) {
 
-    private function toggle($key, $title, $desc, $impact, $settings) {
-
-        $value = $settings[$key] ?? false;
+        $value = !empty($settings[$key]);
         ?>
 
         <div class="wpsct-card">
 
-            <div>
+            <div class="wpsct-row-top">
 
-                <div class="wpsct-title">
-                    <?php echo esc_html($title); ?>
+                <div>
+
+                    <div class="wpsct-title"><?php echo esc_html($title); ?></div>
+
+                    <div class="wpsct-desc"><?php echo esc_html($desc); ?></div>
+
                 </div>
 
-                <div class="wpsct-desc">
-                    <?php echo nl2br(esc_html($desc)); ?>
-                </div>
+                <label class="wpsct-toggle">
 
-                <div class="wpsct-impact">
-                    Impact: <?php echo esc_html(strtoupper($impact)); ?>
-                </div>
+                    <input type="checkbox"
+                           name="wpsct_settings[<?php echo esc_attr($key); ?>]"
+                           value="1"
+                           <?php checked(true, $value); ?>>
+
+                    <span class="wpsct-slider"></span>
+
+                </label>
 
             </div>
 
-            <label class="wpsct-toggle">
+            <div class="wpsct-row-bottom">
 
-                <input type="checkbox"
-                       name="wpsct_settings[<?php echo esc_attr($key); ?>]"
-                       value="1"
-                       <?php checked(1, $value); ?>>
+                <div>
+                    <div class="wpsct-sm-title">What this changes:</div>
+                    <?php echo esc_html($changes); ?>
+                </div>
 
-                <span class="wpsct-slider"></span>
+                <div>
+                    <div class="wpsct-sm-title">Why this is useful:</div>
+                    <?php echo esc_html($why); ?>
+                </div>
 
-            </label>
+                <div class="wpsct-impact">
+                    Impact: <?php echo esc_html($impact); ?>
+                </div>
+
+            </div>
 
         </div>
 
