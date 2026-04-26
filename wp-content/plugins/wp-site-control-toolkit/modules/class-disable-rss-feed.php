@@ -14,6 +14,7 @@ class WPSCT_Disable_Rss_Feed {
     }
 
     public function disable_feed() {
+
         wp_die(
             __('RSS feeds are disabled on this site.', 'wp-site-control-toolkit')
         );

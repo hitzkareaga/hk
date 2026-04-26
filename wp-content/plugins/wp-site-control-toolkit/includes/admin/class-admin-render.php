@@ -4,108 +4,116 @@ if (!defined('ABSPATH')) exit;
 
 class WPSCT_Admin_Render {
 
-    private $presets;
     private $features;
+    private $overview;
 
-    public function __construct($presets, $features) {
-        $this->presets = $presets;
+    public function __construct($features) {
+
         $this->features = $features;
-    }
+        $this->overview = null;
 
-    private function get_active_features_list($settings, $features) {
+        $overview_class = WPSCT_PATH . 'includes/admin/class-admin-overview.php';
 
-        $active = [];
+        if (file_exists($overview_class)) {
+            require_once $overview_class;
 
-        foreach ($settings as $key => $value) {
-
-            if (empty($value)) continue;
-            if (!isset($features[$key])) continue;
-
-            $active[] = $features[$key]['title'];
+            if (class_exists('WPSCT_Admin_Overview')) {
+                $this->overview = new WPSCT_Admin_Overview(
+                    $this->features->get_features()
+                );
+            }
         }
-
-        return $active;
     }
 
     public function render() {
 
         $settings = get_option('wpsct_settings', []);
+        $settings = is_array($settings) ? $settings : [];
+
         $tab = $_GET['tab'] ?? 'cleanup';
 
-        $presets = $this->presets->get_presets();
         $features = $this->features->get_features();
 
-        $active = $this->presets->get_active_preset();
+        $overview = [
+            'score' => 0,
+            'level' => __('Unknown', 'wp-site-control-toolkit'),
+            'recommendations' => [],
+            'active_features' => []
+        ];
 
-        $preset_settings = $presets[$active]['settings'] ?? [];
-        $settings = array_merge($preset_settings, $settings);
+        if ($this->overview instanceof WPSCT_Admin_Overview) {
+
+            $data = $this->overview->get_overview($settings);
+
+            if (is_array($data)) {
+                $overview = array_merge($overview, $data);
+            }
+        }
+
         ?>
 
         <div class="wrap wpsct-wrap">
 
             <h1><?php _e('Site Control Toolkit', 'wp-site-control-toolkit'); ?></h1>
 
-            <div class="wpsct-preset-grid">
+            <!-- OVERVIEW -->
+            <div class="wpsct-overview">
 
-                <div class="wpsct-preset-controls">
+                <!-- SCORE -->
+                <div class="wpsct-overview-section wpsct-overview-score">
 
-                    <div class="wpsct-box-title"><?php _e('Configuration Mode', 'wp-site-control-toolkit'); ?></div>
+                    <h3><?php _e('Score', 'wp-site-control-toolkit'); ?></h3>
 
-                    <form method="post" class="wpsct-presets">
+                    <span class="wpsct-score-number">
+                        <span><?php echo esc_html($overview['score']); ?></span> / 100
+                    </span>
 
-                        <?php foreach ($presets as $key => $preset): ?>
-
-                            <button class="wpsct-preset-btn <?php echo $active === $key ? 'active' : ''; ?>"
-                                    name="wpsct_set_preset"
-                                    value="<?php echo esc_attr($key); ?>">
-
-                                <?php echo esc_html($preset['label']); ?>
-
-                            </button>
-
-                        <?php endforeach; ?>
-
-                    </form>
+                    <div class="wpsct-overview-level">
+                        <?php echo esc_html($overview['level']); ?>
+                    </div>
 
                 </div>
 
-                <div class="wpsct-preset-info">
+                <!-- ACTIVE -->
+                <div class="wpsct-overview-section">
 
-                    <div class="wpsct-preset-active-title">
-                        <?php echo esc_html($presets[$active]['label']); ?>
-                    </div>
+                    <h3><?php _e('Active features', 'wp-site-control-toolkit'); ?></h3>
 
-                    <div class="wpsct-meta-title"><?php _e('What this setup is for', 'wp-site-control-toolkit'); ?></div>
-                    <div class="wpsct-meta-text">
-                        <?php echo esc_html($presets[$active]['desc']); ?>
-                    </div>
+                    <?php if (empty($overview['active_features'])): ?>
+                        <em><?php _e('No features enabled', 'wp-site-control-toolkit'); ?></em>
+                    <?php else: ?>
+                        <ul>
+                            <?php foreach ($overview['active_features'] as $title): ?>
+                                <li><?php echo esc_html($title); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
 
-                    <div class="wpsct-preset-activates">
+                </div>
 
-                        <div class="wpsct-preset-activates-title">
-                            <?php _e('What this setup activates', 'wp-site-control-toolkit'); ?>
-                        </div>
+                <!-- RECOMMENDED -->
+                <div class="wpsct-overview-section">
 
-                        <div class="wpsct-preset-activates-list">
+                    <h3><?php _e('Recommended improvements', 'wp-site-control-toolkit'); ?></h3>
 
-                            <?php $active_list = $this->get_active_features_list($settings, $features); ?>
-
-                            <?php if (empty($active_list)): ?>
-                                <em><?php _e('No features enabled', 'wp-site-control-toolkit'); ?></em>
-                            <?php else: ?>
-                                <?php foreach ($active_list as $item): ?>
-                                    <div>• <?php echo esc_html($item); ?></div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-
-                        </div>
-
-                    </div>
+                    <?php if (empty($overview['recommendations'])): ?>
+                        <em><?php _e('No recommendations available', 'wp-site-control-toolkit'); ?></em>
+                    <?php else: ?>
+                        <ul>
+                            <?php foreach ($overview['recommendations'] as $rec): ?>
+                                <li>
+                                    <strong><?php echo esc_html($rec['title']); ?></strong><br>
+                                    <small><?php echo esc_html($rec['reason']); ?></small>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
 
                 </div>
 
             </div>
 
+            <!-- TABS -->
             <div class="wpsct-tabs">
 
                 <?php $this->tab('cleanup', __('System Cleanup', 'wp-site-control-toolkit'), $tab); ?>
@@ -116,14 +124,13 @@ class WPSCT_Admin_Render {
 
             </div>
 
+            <!-- PANEL -->
             <form method="post" action="options.php">
 
                 <?php settings_fields('wpsct_group'); ?>
 
                 <div class="wpsct-panel">
-
                     <?php $this->render_tab($tab, $settings, $features); ?>
-
                 </div>
 
                 <?php submit_button(); ?>
@@ -150,7 +157,7 @@ class WPSCT_Admin_Render {
 
         foreach ($features as $key => $f) {
 
-            if ($f['group'] !== $tab) continue;
+            if (($f['group'] ?? '') !== $tab) continue;
 
             $this->toggle(
                 $key,
@@ -159,14 +166,15 @@ class WPSCT_Admin_Render {
                 $f['changes'],
                 $f['why'],
                 $f['impact'],
-                $settings
+                $settings,
+                $tab
             );
         }
     }
 
-    private function toggle($key, $title, $desc, $changes, $why, $impact, $settings) {
+    private function toggle($key, $title, $desc, $changes, $why, $impact, $settings, $group) {
 
-        $value = !empty($settings[$key]);
+        $value = !empty($settings[$group][$key]);
         ?>
 
         <div class="wpsct-card">
@@ -180,7 +188,7 @@ class WPSCT_Admin_Render {
 
                 <label class="wpsct-toggle">
                     <input type="checkbox"
-                           name="wpsct_settings[<?php echo esc_attr($key); ?>]"
+                           name="wpsct_settings[<?php echo esc_attr($group); ?>][<?php echo esc_attr($key); ?>]"
                            value="1"
                            <?php checked(true, $value); ?>>
                     <span class="wpsct-slider"></span>
@@ -201,7 +209,8 @@ class WPSCT_Admin_Render {
                 </div>
 
                 <div class="wpsct-impact">
-                    <?php _e('Impact:', 'wp-site-control-toolkit'); ?> <?php echo esc_html($impact); ?>
+                    <?php _e('Impact:', 'wp-site-control-toolkit'); ?>
+                    <?php echo esc_html($impact); ?>
                 </div>
 
             </div>

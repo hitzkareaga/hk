@@ -293,3 +293,88 @@
 .wpsct-card {
     display: block; /* override previous flex */
 }
+
+/* =========================
+   OVERVIEW GRID (3 COLUMNS FIXED)
+========================= */
+
+.wpsct-overview {
+    background: var(--wpsct-dark);
+    color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+/* cada columna como card */
+.wpsct-overview-section {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 16px;
+    min-height: 140px;
+}
+
+/* títulos */
+.wpsct-overview-section h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* listas */
+.wpsct-overview-section ul {
+    margin: 0;
+    padding-left: 0;
+}
+
+.wpsct-overview-section li {
+    margin-bottom: 6px;
+    font-size: 16px;
+    line-height: 1.4;
+}
+.wpsct-overview-section li small {
+    font-style: italic;
+    font-size: 16px;
+}
+/* empty state */
+.wpsct-overview-section em {
+    color: rgba(255, 255, 255, 0.6);
+    font-style: normal;
+}
+
+/* SCORE GRANDE */
+.wpsct-overview-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+.wpsct-score-number {
+    display: block; 
+    padding: 20px 15px 10px;
+}
+.wpsct-score-number span{
+    font-size: 72px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.wpsct-score-label {
+    font-size: 16px;
+    opacity: 0.7;
+    text-transform: uppercase;
+}
+
+.wpsct-overview-level {
+    margin-top: 8px;
+    font-size: 24px;
+    font-weight: 200;
+    text-transform: uppercase;
+    opacity: 0.85;
+}

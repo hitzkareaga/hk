@@ -4,29 +4,28 @@ if (!defined('ABSPATH')) exit;
 
 class WPSCT_Admin {
 
-    private $presets;
     private $features;
     private $render;
 
     public function __construct() {
 
-        require_once WPSCT_PATH . 'includes/admin/class-admin-presets.php';
         require_once WPSCT_PATH . 'includes/admin/class-admin-features.php';
+        require_once WPSCT_PATH . 'includes/admin/class-admin-overview.php';
         require_once WPSCT_PATH . 'includes/admin/class-admin-render.php';
 
-        // IMPORTANT: presets ahora tiene hooks internos
-        $this->presets = new WPSCT_Admin_Presets();
-
         $this->features = new WPSCT_Admin_Features();
-        $this->render = new WPSCT_Admin_Render($this->presets, $this->features);
+
+        $this->render = new WPSCT_Admin_Render(
+            $this->features
+        );
 
         add_action('admin_menu', [$this, 'menu']);
-        add_action('admin_init', [$this->presets, 'handle_preset_save']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']);
     }
 
     public function menu() {
+
         add_menu_page(
             __('Site Control Toolkit', 'wp-site-control-toolkit'),
             __('Site Control', 'wp-site-control-toolkit'),
@@ -39,7 +38,39 @@ class WPSCT_Admin {
     }
 
     public function register_settings() {
-        register_setting('wpsct_group', 'wpsct_settings');
+
+        register_setting(
+            'wpsct_group',
+            'wpsct_settings',
+            [
+                'type' => 'array',
+                'sanitize_callback' => [$this, 'sanitize_settings'],
+                'default' => []
+            ]
+        );
+    }
+
+    /**
+     * 🔥 FIX REAL: merge global plano SIN romper tabs
+     */
+    public function sanitize_settings($input) {
+
+        $old = get_option('wpsct_settings', []);
+
+        if (!is_array($old)) {
+            $old = [];
+        }
+
+        if (!is_array($input)) {
+            $input = [];
+        }
+
+        /**
+         * IMPORTANTE:
+         * input viene SOLO con lo enviado en el submit actual
+         * pero old contiene todo lo anterior
+         */
+        return array_merge($old, $input);
     }
 
     public function enqueue_assets($hook) {
@@ -52,14 +83,5 @@ class WPSCT_Admin {
             [],
             '0.1.0'
         );
-
-        wp_enqueue_script(
-            'wpsct-admin',
-            WPSCT_URL . 'assets/js/admin.js',
-            [],
-            '0.1.0',
-            true
-        );
-        
     }
 }

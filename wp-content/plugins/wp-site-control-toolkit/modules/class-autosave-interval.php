@@ -4,19 +4,29 @@ if (!defined('ABSPATH')) exit;
 
 class WPSCT_Autosave_Interval {
 
+    private $settings;
+
     public function __construct() {
+
+        $this->settings = get_option('wpsct_settings', []);
 
         add_filter('autosave_interval', [$this, 'set_interval']);
     }
 
     public function set_interval($seconds) {
 
+        // Feature disabled → no override
+        if (empty($this->settings['autosave-interval'])) {
+            return $seconds;
+        }
+
         /**
-         * Default WordPress: 60 seconds
-         * Here we give a slightly more balanced value.
-         * You can later make this configurable.
+         * Default override (can later be PRO configurable)
+         * Example: 120 seconds instead of 60
          */
 
-        return 90;
+        $custom = 120;
+
+        return $custom;
     }
 }

@@ -10,14 +10,18 @@ class WPSCT_Core {
 
     private function load_modules() {
 
-        $settings = get_option('wpsct_settings', []);
-
         if (!function_exists('wpsct_get_content')) {
             return;
         }
 
         $content  = wpsct_get_content();
         $features = $content['features'] ?? [];
+
+        $settings = get_option('wpsct_settings', []);
+
+        if (!is_array($settings)) {
+            $settings = [];
+        }
 
         foreach ($features as $key => $feature) {
 
@@ -48,7 +52,6 @@ class WPSCT_Core {
     private function get_class_name($key) {
 
         $parts = explode('-', $key);
-
         $parts = array_map('ucfirst', $parts);
 
         return 'WPSCT_' . implode('_', $parts);
