@@ -33,7 +33,7 @@ class WPSCT_Admin {
             'wpsct',
             [$this->render, 'render'],
             'dashicons-yes',
-            58
+            81
         );
     }
 
@@ -50,12 +50,13 @@ class WPSCT_Admin {
         );
     }
 
-    /**
-     * 🔥 FIX REAL: merge global plano SIN romper tabs
-     */
     public function sanitize_settings($input) {
 
         $old = get_option('wpsct_settings', []);
+        $current_tab = isset($_POST['wpsct_current_tab'])
+            ? sanitize_key(wp_unslash($_POST['wpsct_current_tab']))
+            : '';
+        $features = $this->features->get_features();
 
         if (!is_array($old)) {
             $old = [];
@@ -65,12 +66,39 @@ class WPSCT_Admin {
             $input = [];
         }
 
-        /**
-         * IMPORTANTE:
-         * input viene SOLO con lo enviado en el submit actual
-         * pero old contiene todo lo anterior
-         */
-        return array_merge($old, $input);
+        $sanitized = $old;
+
+        if ($current_tab !== '') {
+            if (!isset($sanitized[$current_tab]) || !is_array($sanitized[$current_tab])) {
+                $sanitized[$current_tab] = [];
+            }
+
+            foreach ($features as $key => $feature) {
+                if (($feature['group'] ?? '') !== $current_tab) {
+                    continue;
+                }
+
+                unset($sanitized[$current_tab][$key]);
+            }
+        }
+
+        foreach ($input as $group => $items) {
+            $group = sanitize_key($group);
+
+            if (!is_array($items)) {
+                continue;
+            }
+
+            if (!isset($sanitized[$group]) || !is_array($sanitized[$group])) {
+                $sanitized[$group] = [];
+            }
+
+            foreach ($items as $key => $value) {
+                $sanitized[$group][sanitize_key($key)] = empty($value) ? 0 : 1;
+            }
+        }
+
+        return $sanitized;
     }
 
     public function enqueue_assets($hook) {

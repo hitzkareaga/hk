@@ -67,12 +67,12 @@ class WPSCT_Admin_Features {
             ],
 
             'disable-gutenberg' => [
-                'title' => __('Disable Gutenberg and show classic editor', 'wp-site-control-toolkit'),
+                'title' => __('Disable Gutenberg and enable Classic Editor', 'wp-site-control-toolkit'),
                 'desc' => __('Replaces the block editor with the classic WordPress editor.', 'wp-site-control-toolkit'),
                 'changes' => __('Disables Gutenberg and restores the classic editing interface.', 'wp-site-control-toolkit'),
                 'why' => __('Useful if you prefer the old editor or rely on plugins not compatible with Gutenberg.', 'wp-site-control-toolkit'),
                 'impact' => 'MEDIUM',
-                'group' => 'performance',
+                'group' => 'cleanup',
                 'category' => 'performance'
             ],
 

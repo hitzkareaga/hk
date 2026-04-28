@@ -4,11 +4,7 @@ if (!defined('ABSPATH')) exit;
 
 class WPSCT_Disable_Comments {
 
-    private $settings;
-
     public function __construct() {
-
-        $this->settings = get_option('wpsct_settings', []);
 
         add_action('init', [$this, 'disable_comments_support']);
 
@@ -20,11 +16,6 @@ class WPSCT_Disable_Comments {
     }
 
     public function disable_comments_support() {
-
-        if (empty($this->settings['disable-comments'])) {
-            return;
-        }
-
         $post_types = get_post_types();
 
         foreach ($post_types as $post_type) {
@@ -36,20 +27,10 @@ class WPSCT_Disable_Comments {
     }
 
     public function remove_comments_menu() {
-
-        if (empty($this->settings['disable-comments'])) {
-            return;
-        }
-
         remove_menu_page('edit-comments.php');
     }
 
     public function remove_comments_support() {
-
-        if (empty($this->settings['disable-comments'])) {
-            return;
-        }
-
         global $wp_post_types;
 
         foreach ($wp_post_types as $post_type => $data) {

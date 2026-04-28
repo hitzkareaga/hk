@@ -5,9 +5,15 @@ if (!defined('ABSPATH')) exit;
 class WPSCT_Admin_Overview {
 
     private $features;
+    private $impact_weights;
 
     public function __construct(array $features) {
         $this->features = $features;
+        $this->impact_weights = [
+            'LOW' => 1,
+            'MEDIUM' => 2,
+            'HIGH' => 3,
+        ];
     }
 
     /**
@@ -36,24 +42,37 @@ class WPSCT_Admin_Overview {
         $settings = is_array($settings) ? $settings : [];
 
         $flat = $this->flatten_settings($settings);
-
-        $total = count($this->features);
-
-        $active = 0;
         $active_titles = [];
+        $active_groups = [];
+        $active_weight = 0;
+        $total_weight = 0;
 
-        foreach ($flat as $key => $value) {
+        foreach ($this->features as $key => $feature) {
 
-            if (!$value) continue;
-            if (!isset($this->features[$key])) continue;
+            $weight = $this->get_feature_weight($feature);
+            $total_weight += $weight;
 
-            $active++;
-            $active_titles[] = $this->features[$key]['title'];
+            if (empty($flat[$key])) {
+                continue;
+            }
+
+            $active_weight += $weight;
+            $active_titles[] = $feature['title'];
+
+            $group = $feature['group'] ?? '';
+
+            if ($group !== '') {
+                $active_groups[$group] = true;
+            }
         }
 
-        $score = $total > 0
-            ? (int)(($active / $total) * 100)
+        $weighted_score = $total_weight > 0
+            ? ($active_weight / $total_weight) * 90
             : 0;
+
+        $category_bonus = count($active_groups) * 2;
+
+        $score = (int) min(100, round($weighted_score + $category_bonus));
 
         $recommendations = $this->get_recommendations($flat);
 
@@ -67,19 +86,30 @@ class WPSCT_Admin_Overview {
 
     private function get_level(int $score): string {
 
-        if ($score >= 80) {
+        if ($score >= 85) {
             return __('Optimized', 'wp-site-control-toolkit');
+        }
+
+        if ($score >= 70) {
+            return __('Strong', 'wp-site-control-toolkit');
         }
 
         if ($score >= 50) {
             return __('Balanced', 'wp-site-control-toolkit');
         }
 
-        if ($score >= 20) {
+        if ($score >= 25) {
             return __('Basic', 'wp-site-control-toolkit');
         }
 
         return __('Minimal', 'wp-site-control-toolkit');
+    }
+
+    private function get_feature_weight(array $feature): int {
+
+        $impact = strtoupper($feature['impact'] ?? 'LOW');
+
+        return $this->impact_weights[$impact] ?? 1;
     }
 
     /**

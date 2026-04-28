@@ -80,13 +80,11 @@ class WPSCT_Admin_Render {
                     <h3><?php _e('Active features', 'wp-site-control-toolkit'); ?></h3>
 
                     <?php if (empty($overview['active_features'])): ?>
-                        <em><?php _e('No features enabled', 'wp-site-control-toolkit'); ?></em>
+                        <em class="wpsct-active-features-text"><?php _e('No features enabled', 'wp-site-control-toolkit'); ?></em>
                     <?php else: ?>
-                        <ul>
-                            <?php foreach ($overview['active_features'] as $title): ?>
-                                <li><?php echo esc_html($title); ?></li>
-                            <?php endforeach; ?>
-                        </ul>
+                        <div class="wpsct-active-features-text">
+                            <?php echo esc_html(implode(', ', $overview['active_features'])); ?>
+                        </div>
                     <?php endif; ?>
 
                 </div>
@@ -113,27 +111,39 @@ class WPSCT_Admin_Render {
 
             </div>
 
-            <!-- TABS -->
-            <div class="wpsct-tabs">
-
-                <?php $this->tab('cleanup', __('System Cleanup', 'wp-site-control-toolkit'), $tab); ?>
-                <?php $this->tab('performance', __('Performance', 'wp-site-control-toolkit'), $tab); ?>
-                <?php $this->tab('security', __('Security', 'wp-site-control-toolkit'), $tab); ?>
-                <?php $this->tab('access-api', __('Access & API', 'wp-site-control-toolkit'), $tab); ?>
-                <?php $this->tab('media', __('Media', 'wp-site-control-toolkit'), $tab); ?>
-
-            </div>
-
-            <!-- PANEL -->
             <form method="post" action="options.php">
 
                 <?php settings_fields('wpsct_group'); ?>
+                <input type="hidden" name="wpsct_current_tab" value="<?php echo esc_attr($tab); ?>">
 
+                <!-- TABS -->
+                <div class="wpsct-tabs">
+
+                    <div class="wpsct-tabs-nav">
+                        <?php $this->tab('cleanup', __('Core & UI Cleanup', 'wp-site-control-toolkit'), $tab); ?>
+                        <?php $this->tab('performance', __('Performance', 'wp-site-control-toolkit'), $tab); ?>
+                        <?php $this->tab('security', __('Security', 'wp-site-control-toolkit'), $tab); ?>
+                        <?php $this->tab('access-api', __('API & Public Exposure', 'wp-site-control-toolkit'), $tab); ?>
+                        <?php $this->tab('media', __('Media & Asset', 'wp-site-control-toolkit'), $tab); ?>
+                    </div>
+
+                    <div class="wpsct-tabs-actions">
+                        <button type="submit" name="submit" class="button button-primary wpsct-save-button">
+                            <span class="wpsct-save-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    <path d="M5 3h11l3 3v15H5V3zm2 2v4h8V5H7zm0 8v6h10v-6H7zm2 1h6v4H9v-4z" />
+                                </svg>
+                            </span>
+                            <span><?php echo esc_html(sprintf(__('Save %s', 'wp-site-control-toolkit'), $this->get_tab_label($tab))); ?></span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- PANEL -->
                 <div class="wpsct-panel">
                     <?php $this->render_tab($tab, $settings, $features); ?>
                 </div>
-
-                <?php submit_button(); ?>
 
             </form>
 
@@ -151,6 +161,19 @@ class WPSCT_Admin_Render {
             <?php echo esc_html($label); ?>
         </a>
         <?php
+    }
+
+    private function get_tab_label($tab) {
+
+        $labels = [
+            'cleanup' => __('Core & UI Cleanup', 'wp-site-control-toolkit'),
+            'performance' => __('Performance', 'wp-site-control-toolkit'),
+            'security' => __('Security', 'wp-site-control-toolkit'),
+            'access-api' => __('API & Public Exposure', 'wp-site-control-toolkit'),
+            'media' => __('Media & Asset', 'wp-site-control-toolkit'),
+        ];
+
+        return $labels[$tab] ?? __('Settings', 'wp-site-control-toolkit');
     }
 
     private function render_tab($tab, $settings, $features) {

@@ -87,7 +87,7 @@ Improves backend performance and reduces server load.",
     ],
 
     'disable-gutenberg' => [
-        'label' => __('Disable Gutenberg', 'wp-site-control-toolkit'),
+        'label' => __('Disable Gutenberg and enable Classic Editor', 'wp-site-control-toolkit'),
         'desc'  => __(
 "WordPress uses Gutenberg block editor by default.
 
@@ -98,7 +98,7 @@ What this changes:
 Why this is useful:
 Simplifies editing experience and improves compatibility with page builders.",
         'wp-site-control-toolkit'),
-        'group' => 'performance',
+        'group' => 'cleanup',
         'impact' => 'high',
     ],
 

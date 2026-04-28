@@ -10,14 +10,16 @@ class WPSCT_Core {
 
     private function load_modules() {
 
-        if (!function_exists('wpsct_get_content')) {
+        require_once WPSCT_PATH . 'includes/admin/class-admin-features.php';
+
+        if (!class_exists('WPSCT_Admin_Features')) {
             return;
         }
 
-        $content  = wpsct_get_content();
-        $features = $content['features'] ?? [];
+        $features = (new WPSCT_Admin_Features())->get_features();
 
         $settings = get_option('wpsct_settings', []);
+        $settings = $this->flatten_settings($settings);
 
         if (!is_array($settings)) {
             $settings = [];
@@ -55,5 +57,29 @@ class WPSCT_Core {
         $parts = array_map('ucfirst', $parts);
 
         return 'WPSCT_' . implode('_', $parts);
+    }
+
+    private function flatten_settings($settings) {
+
+        if (!is_array($settings)) {
+            return [];
+        }
+
+        $flat = [];
+
+        foreach ($settings as $key => $value) {
+
+            if (is_array($value)) {
+                foreach ($value as $child_key => $child_value) {
+                    $flat[$child_key] = !empty($child_value);
+                }
+
+                continue;
+            }
+
+            $flat[$key] = !empty($value);
+        }
+
+        return $flat;
     }
 }
