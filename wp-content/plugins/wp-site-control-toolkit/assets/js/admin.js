@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const presetButtons = document.querySelectorAll('.wpsct-preset-btn');
     const toggles = document.querySelectorAll('.wpsct-toggle input');
+    const detailToggles = document.querySelectorAll('.wpsct-info-toggle, .wpsct-title-toggle');
 
     let currentPreset = getActivePreset();
 
@@ -77,6 +78,89 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function bindDetailToggles() {
+
+        detailToggles.forEach(btn => {
+
+            btn.addEventListener('click', function () {
+
+                const targetId = this.getAttribute('aria-controls');
+                const target = targetId ? document.getElementById(targetId) : null;
+
+                if (!target) return;
+
+                const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                const nextExpanded = !isExpanded;
+
+                syncDetailToggleState(targetId, nextExpanded);
+                target.hidden = !nextExpanded;
+            });
+        });
+    }
+
+    function syncDetailToggleState(targetId, isExpanded) {
+
+        document
+            .querySelectorAll('[aria-controls="' + targetId + '"]')
+            .forEach(control => {
+                control.setAttribute('aria-expanded', String(isExpanded));
+            });
+    }
+
+    function bindModals() {
+
+        document.addEventListener('click', function (event) {
+
+            const openControl = event.target.closest('[data-wpsct-modal-open]');
+
+            if (!openControl) return;
+
+            const modalId = openControl.getAttribute('data-wpsct-modal-open');
+            const modal = modalId ? document.getElementById(modalId) : null;
+
+            if (!modal) return;
+
+            modal.hidden = false;
+            document.body.classList.add('wpsct-modal-open');
+
+            const closeButton = modal.querySelector('[data-wpsct-modal-close]');
+
+            if (closeButton) {
+                closeButton.focus();
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+
+            const closeControl = event.target.closest('[data-wpsct-modal-close]');
+
+            if (!closeControl) return;
+
+            const modal = closeControl.closest('.wpsct-modal');
+
+            if (!modal) return;
+
+            closeModal(modal);
+        });
+
+        document.addEventListener('keydown', function (event) {
+
+            if (event.key !== 'Escape') return;
+
+            const modal = document.querySelector('.wpsct-modal:not([hidden])');
+
+            if (modal) {
+                closeModal(modal);
+            }
+        });
+    }
+
+    function closeModal(modal) {
+
+        modal.hidden = true;
+        document.body.classList.remove('wpsct-modal-open');
+    }
+
     function syncInitialState() {
         setActivePresetUI(currentPreset);
     }
@@ -84,6 +168,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // INIT
     bindToggleChanges();
     bindPresetButtons();
+    bindDetailToggles();
+    bindModals();
     syncInitialState();
 
 });

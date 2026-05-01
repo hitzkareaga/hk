@@ -10,13 +10,15 @@ class WPSCT_Admin {
     public function __construct() {
 
         require_once WPSCT_PATH . 'includes/admin/class-admin-features.php';
+        require_once WPSCT_PATH . 'includes/admin/class-admin-plans.php';
         require_once WPSCT_PATH . 'includes/admin/class-admin-overview.php';
         require_once WPSCT_PATH . 'includes/admin/class-admin-render.php';
 
         $this->features = new WPSCT_Admin_Features();
 
         $this->render = new WPSCT_Admin_Render(
-            $this->features
+            $this->features,
+            new WPSCT_Admin_Plans()
         );
 
         add_action('admin_menu', [$this, 'menu']);
@@ -94,7 +96,13 @@ class WPSCT_Admin {
             }
 
             foreach ($items as $key => $value) {
-                $sanitized[$group][sanitize_key($key)] = empty($value) ? 0 : 1;
+                $key = sanitize_key($key);
+
+                if (!empty($features[$key]['pro'])) {
+                    continue;
+                }
+
+                $sanitized[$group][$key] = empty($value) ? 0 : 1;
             }
         }
 
@@ -105,11 +113,22 @@ class WPSCT_Admin {
 
         if ($hook !== 'toplevel_page_wpsct') return;
 
+        $css_path = WPSCT_PATH . 'assets/css/admin.css';
+        $js_path = WPSCT_PATH . 'assets/js/admin.js';
+
         wp_enqueue_style(
             'wpsct-admin',
             WPSCT_URL . 'assets/css/admin.css',
             [],
-            '0.1.0'
+            file_exists($css_path) ? filemtime($css_path) : '0.1.0'
+        );
+
+        wp_enqueue_script(
+            'wpsct-admin',
+            WPSCT_URL . 'assets/js/admin.js',
+            [],
+            file_exists($js_path) ? filemtime($js_path) : '0.1.0',
+            true
         );
     }
 }

@@ -99,7 +99,7 @@ Why this is useful:
 Simplifies editing experience and improves compatibility with page builders.",
         'wp-site-control-toolkit'),
         'group' => 'cleanup',
-        'impact' => 'high',
+        'impact' => 'low',
     ],
 
     'login-security' => [
@@ -129,7 +129,7 @@ Why this is useful:
 Prevents accidental or malicious code changes.",
         'wp-site-control-toolkit'),
         'group' => 'security',
-        'impact' => 'medium',
+        'impact' => 'high',
     ],
 
     'disable-xmlrpc' => [
@@ -144,7 +144,7 @@ Why this is useful:
 Reduces attack surface.",
         'wp-site-control-toolkit'),
         'group' => 'security',
-        'impact' => 'medium',
+        'impact' => 'high',
     ],
 
     'media-sizes' => [

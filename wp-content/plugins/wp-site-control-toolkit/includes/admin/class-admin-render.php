@@ -5,11 +5,13 @@ if (!defined('ABSPATH')) exit;
 class WPSCT_Admin_Render {
 
     private $features;
+    private $plans;
     private $overview;
 
-    public function __construct($features) {
+    public function __construct($features, $plans = null) {
 
         $this->features = $features;
+        $this->plans = $plans;
         $this->overview = null;
 
         $overview_class = WPSCT_PATH . 'includes/admin/class-admin-overview.php';
@@ -30,7 +32,7 @@ class WPSCT_Admin_Render {
         $settings = get_option('wpsct_settings', []);
         $settings = is_array($settings) ? $settings : [];
 
-        $tab = $_GET['tab'] ?? 'cleanup';
+        $tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'cleanup';
 
         $features = $this->features->get_features();
 
@@ -54,7 +56,15 @@ class WPSCT_Admin_Render {
 
         <div class="wrap wpsct-wrap">
 
-            <h1><?php _e('Site Control Toolkit', 'wp-site-control-toolkit'); ?></h1>
+            <div class="wpsct-page-header">
+                <h1><?php _e('Site Control Toolkit', 'wp-site-control-toolkit'); ?></h1>
+
+                <button type="button"
+                        class="button wpsct-premium-open"
+                        data-wpsct-modal-open="wpsct-premium-modal">
+                    <?php _e('VER PLANES PREMIUM', 'wp-site-control-toolkit'); ?>
+                </button>
+            </div>
 
             <!-- OVERVIEW -->
             <div class="wpsct-overview">
@@ -147,6 +157,8 @@ class WPSCT_Admin_Render {
 
             </form>
 
+            <?php $this->render_premium_modal(); ?>
+
         </div>
 
         <?php
@@ -178,62 +190,167 @@ class WPSCT_Admin_Render {
 
     private function render_tab($tab, $settings, $features) {
 
-        foreach ($features as $key => $f) {
+        $tab_features = array_filter($features, function ($feature) use ($tab) {
+            return ($feature['group'] ?? '') === $tab;
+        });
 
-            if (($f['group'] ?? '') !== $tab) continue;
+        uasort($tab_features, function ($a, $b) {
+            return (int) !empty($a['pro']) <=> (int) !empty($b['pro']);
+        });
+
+        foreach ($tab_features as $key => $f) {
 
             $this->toggle(
                 $key,
                 $f['title'],
                 $f['desc'],
                 $f['changes'],
+                $f['risk'] ?? '',
                 $f['why'],
                 $f['impact'],
+                !empty($f['pro']),
                 $settings,
                 $tab
             );
         }
     }
 
-    private function toggle($key, $title, $desc, $changes, $why, $impact, $settings, $group) {
+    private function render_premium_modal() {
 
-        $value = !empty($settings[$group][$key]);
+        $plans = $this->plans && method_exists($this->plans, 'get_plans')
+            ? $this->plans->get_plans()
+            : [];
         ?>
 
-        <div class="wpsct-card">
+        <div class="wpsct-modal" id="wpsct-premium-modal" hidden>
+            <div class="wpsct-modal-backdrop" data-wpsct-modal-close></div>
+
+            <div class="wpsct-modal-dialog"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="wpsct-premium-modal-title">
+
+                <div class="wpsct-modal-header">
+                    <div>
+                        <h2 id="wpsct-premium-modal-title"><?php _e('Premium plans', 'wp-site-control-toolkit'); ?></h2>
+                        <p><?php _e('Choose the license size that matches how many websites you manage.', 'wp-site-control-toolkit'); ?></p>
+                    </div>
+
+                    <button type="button"
+                            class="wpsct-modal-close"
+                            data-wpsct-modal-close
+                            aria-label="<?php esc_attr_e('Close premium plans', 'wp-site-control-toolkit'); ?>">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="wpsct-plan-grid">
+                    <?php foreach ($plans as $plan): ?>
+                        <div class="wpsct-plan-card">
+                            <div class="wpsct-plan-name"><?php echo esc_html($plan['name']); ?></div>
+
+                            <div class="wpsct-plan-price">
+                                <span class="wpsct-plan-currency">&euro;</span><?php echo esc_html($plan['price']); ?>
+                            </div>
+
+                            <div class="wpsct-plan-sites"><?php echo esc_html($plan['sites']); ?></div>
+                            <div class="wpsct-plan-audience"><?php echo esc_html($plan['audience']); ?></div>
+
+                            <button type="button" class="button wpsct-plan-button" disabled>
+                                <?php _e('Coming soon', 'wp-site-control-toolkit'); ?>
+                            </button>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+
+        <?php
+    }
+
+    private function toggle($key, $title, $desc, $changes, $risk, $why, $impact, $is_pro, $settings, $group) {
+
+        $value = !$is_pro && !empty($settings[$group][$key]);
+        $details_id = 'wpsct-details-' . sanitize_html_class($key);
+        ?>
+
+        <div class="wpsct-card <?php echo $is_pro ? 'wpsct-card-pro' : ''; ?>">
 
             <div class="wpsct-row-top">
 
-                <div>
-                    <div class="wpsct-title"><?php echo esc_html($title); ?></div>
+                <div class="wpsct-feature-copy">
+                    <div class="wpsct-title-row">
+                        <button type="button"
+                                class="wpsct-info-toggle"
+                                aria-expanded="false"
+                                aria-controls="<?php echo esc_attr($details_id); ?>"
+                                title="<?php esc_attr_e('Show details', 'wp-site-control-toolkit'); ?>">
+                            <span aria-hidden="true">i</span>
+                            <span class="screen-reader-text"><?php _e('Show feature details', 'wp-site-control-toolkit'); ?></span>
+                        </button>
+
+                        <div class="wpsct-title">
+                            <button type="button"
+                                    class="wpsct-title-toggle"
+                                    aria-expanded="false"
+                                    aria-controls="<?php echo esc_attr($details_id); ?>">
+                                <?php echo esc_html($title); ?>
+                            </button>
+                            <?php if ($is_pro): ?>
+                                <span class="wpsct-pro-badge"><?php _e('Premium', 'wp-site-control-toolkit'); ?></span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
                     <div class="wpsct-desc"><?php echo esc_html($desc); ?></div>
                 </div>
 
-                <label class="wpsct-toggle">
-                    <input type="checkbox"
-                           name="wpsct_settings[<?php echo esc_attr($group); ?>][<?php echo esc_attr($key); ?>]"
-                           value="1"
-                           <?php checked(true, $value); ?>>
-                    <span class="wpsct-slider"></span>
-                </label>
+                <div class="wpsct-feature-actions">
+                    <div class="wpsct-action-row">
+                        <div class="wpsct-toggle-stack">
+                            <label class="wpsct-toggle">
+                                <input type="checkbox"
+                                       name="wpsct_settings[<?php echo esc_attr($group); ?>][<?php echo esc_attr($key); ?>]"
+                                       value="1"
+                                       <?php disabled(true, $is_pro); ?>
+                                       <?php checked(true, $value); ?>>
+                                <span class="wpsct-slider"></span>
+                            </label>
+
+                            <div class="wpsct-impact">
+                                <?php _e('Impact:', 'wp-site-control-toolkit'); ?>
+                                <?php echo esc_html($impact); ?>
+                            </div>
+
+                            <?php if ($is_pro): ?>
+                                <button type="button"
+                                        class="button wpsct-feature-buy"
+                                        data-wpsct-modal-open="wpsct-premium-modal">
+                                    <?php _e('COMPRAR', 'wp-site-control-toolkit'); ?>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+
+                    </div>
+                </div>
 
             </div>
 
-            <div class="wpsct-row-bottom">
+            <div class="wpsct-row-bottom" id="<?php echo esc_attr($details_id); ?>" hidden>
 
                 <div>
                     <div class="wpsct-sm-title"><?php _e('What this changes:', 'wp-site-control-toolkit'); ?></div>
                     <?php echo esc_html($changes); ?>
+                    <?php if ($risk !== ''): ?>
+                        <div class="wpsct-risk-note">
+                            <?php echo esc_html($risk); ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div>
                     <div class="wpsct-sm-title"><?php _e('Why this is useful:', 'wp-site-control-toolkit'); ?></div>
                     <?php echo esc_html($why); ?>
-                </div>
-
-                <div class="wpsct-impact">
-                    <?php _e('Impact:', 'wp-site-control-toolkit'); ?>
-                    <?php echo esc_html($impact); ?>
                 </div>
 
             </div>

@@ -49,6 +49,10 @@ class WPSCT_Admin_Overview {
 
         foreach ($this->features as $key => $feature) {
 
+            if (!empty($feature['pro'])) {
+                continue;
+            }
+
             $weight = $this->get_feature_weight($feature);
             $total_weight += $weight;
 
